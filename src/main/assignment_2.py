@@ -1,118 +1,152 @@
+# Chloe Ogles
+
 import numpy as np
 
 def nevilles_method(x_points, y_points, x):
-    matrix = np.zeros((len(x_points), len(x_points)))
-
-    for i in range(len(x_points)):
-        matrix[i][0] = y_points[i]
-
-    for i in range(1, len(x_points)):
-        for j in range(1, i + 1):
-            term_1 = (x - x_points[i - j]) * matrix[i][j - 1]
-            term_2 = (x - x_points[i]) * matrix[i - 1][j - 1]
-            matrix[i][j] = (term_1 - term_2) / (x_points[i] - x_points[i - j])
-
-    print(matrix[len(x_points) - 1][len(x_points) - 1])
-
-def divided_difference_table(x_points, y_points):
-    size = len(x_points)
-    matrix = np.zeros((size, size))
-
-    for i in range(size):
-        matrix[i][0] = y_points[i]
-
-    for i in range(1, size):
-        for j in range(1, i + 1):
-            matrix[i][j] = (matrix[i][j - 1] - matrix[i - 1][j - 1]) / (x_points[i] - x_points[i - j])
-
-            if i == j:
-                print(matrix[i][j])
-
+    matrix = np.zeros((3,3))
+    for counter, row in enumerate(matrix):
+        row[0] = y_points[counter]
+    num_of_points = len (x_points)
+    for i in range(1, num_of_points):
+        
+        for j in range(1,i+1):
+            
+            first_multi = (x - x_points[i-j]) * matrix[i][j-1]
+            second_multi = (x - x_points[i]) * matrix[i-1][j-1]
+            denominator = x_points[i] - x_points[i-j]
+            coefficient = (first_multi - second_multi)/denominator
+            matrix[i][j] = coefficient
+            
+    print(matrix[len(x_points)-1][len(x_points)-1])
+    
     return matrix
 
-def get_approximate_result(matrix, x_points, value, start):
-    reoccuring_x_span = 1
-    reoccuring_px_result = start
-    
-    # we only need the diagonals...and that starts at the first row...
-    for index in range(1, len(matrix)):
-        polynomial_coefficient = matrix[index][index]
-
-        # we use the previous index for x_points....
-        reoccuring_x_span *= (value - x_points[index - 1])
+def divided_difference_table(x_points, y_points):
+    size: int = len(x_points)
         
-        # get a_of_x * the x_span
+    matrix: np.array = np.zeros((4,4))
+    for index, row in enumerate(matrix):
+        
+        row[0] = y_points[index]
+    for i in range(1, size):
+        
+        for j in range(1, i+1):
+            num = matrix[i][j-1] - matrix[i-1][j-1]
+            denom = x_points[i] - x_points[i-j]
+            operation = num / denom
+            matrix[i][j] = (operation)
+    return matrix
+
+def get_approximate_result(matrix, x_points, value): 
+    reoccuring_x_span = 1
+    reoccuring_px_result = matrix[0][0]
+    
+    for index in range(1, len(x_points)):
+        polynomial_coefficient = matrix[index][index]
+        reoccuring_x_span *= (value - x_points[index-1])
+        
         mult_operation = polynomial_coefficient * reoccuring_x_span
-
-        # add the reoccuring px result
         reoccuring_px_result += mult_operation
+    
+    return reoccuring_px_result
 
-    print(reoccuring_px_result)
-
-def hermite_matrix(x_points, y_points, derivative):
-    size = 2 * len(x_points)
-    matrix = np.zeros((size, size + 1))
-
-    for i in range(size):
-        matrix[i][0] = x_points[i // 2]
-        matrix[i][1] = y_points[i // 2]
-
-    for i in range(1, size, 2):
-        matrix[i][2] = derivative[i // 2]
-
+np.set_printoptions(precision=7, suppress=True, linewidth=100
+                   )
+def apply_div_dif(matrix: np.array):
+    size = len(matrix)
     for i in range(2, size):
-        for j in range(2, i + 2):
-            if matrix[i][j] != 0.:
+        for j in range(2, i+2):
+            if j >= len(matrix[i]) or matrix[i][j] != 0:
                 continue
             
-            matrix[i][j] = (matrix[i][j - 1] - matrix[i - 1][j - 1]) / (matrix[i][0] - matrix[i - j + 1][0])
+            left: float = matrix[i][j-1]
+            diagonal_left: float = matrix[i-1][j-1]
+            numerator: float = ( left - diagonal_left )
+            denominator = matrix[i][0]- matrix[i-j+1][0]
+            operation = numerator / denominator
+            matrix[i][j] = operation
+    
+    return matrix
 
-    print(np.matrix(matrix))
+def hermite_interpolation():
+    x_points = [3.6, 3.8, 3.9]
+    y_points = [1.675, 1.436, 1.318]
+    slopes = [-1.195, -1.188, -1.182]
+    num_of_points = 2*len(x_points)
+    matrix = np.zeros((num_of_points, num_of_points))
+    counter = 0
+    for x in range(0, num_of_points,2):
+        matrix[x][0] = x_points[counter]
+        matrix[x+1][0] = x_points[counter]
+        counter +=1
+    counter = 0
+    for x in range(0,num_of_points, 2):
+        matrix[x][1] = y_points[counter]
+        matrix[x+1][1] = y_points[counter]
+        counter +=1
+     
+    counter = 0
+    for x in range(1,num_of_points,2):
+        matrix[x][2] = slopes[counter]
+        counter +=1
+    
+    filled_matrix = apply_div_dif(matrix)
+    print(filled_matrix)
 
-def cubic_spline_interpolation(x_points, y_points):
+def CubicSplineInterpolation ():
+    
+    x_points = np.array([2, 5, 8, 10])
+    y_points = np.array([3, 5, 7, 9])
+
     size = len(x_points)
-    matrix = np.zeros((size, size))
-    matrix[0][0] = matrix[size - 1][size - 1] = 1
 
-    for i in range(1, size - 1):
-        index = i - 1
-        for j in range(index, size, 2):
-            matrix[i][j] = x_points[index + 1] - x_points[index]
-            index += 1
+    Matrix = np.zeros((size, size))
+    Matrix[0, 0] = 1
+    Matrix[size-1, size-1] = 1
+    
+    for i in range(1, size-1):
+        Matrix[i, i-1] = x_points[i] - x_points[i-1]
+        Matrix[i, i] = 2 * (x_points[i+1] - x_points[i-1])
+        Matrix[i, i+1] = x_points[i+1] - x_points[i]
 
-    for i in range(1, size - 1):
-        matrix[i][i] = 2 * ((x_points[i + 1] - x_points[i]) + (x_points[i] - x_points[i - 1]))
+    Array = np.zeros(size)
+    
+    for i in range(1, size-1):
+        Array[i] = 3 * (y_points[i+1] - y_points[i]) / (x_points[i+1] - x_points[i]) - \
+        3 * (y_points[i] - y_points[i-1]) / (x_points[i] - x_points[i-1])
 
-    print(np.matrix(matrix))
+    XArray = np.linalg.solve(Matrix, Array)
+    
+    print(Matrix)
+    print("\n")
+    print(Array)
+    print("\n")
+    print(XArray)
+    
+if __name__ == "__main__":
+    
+    x_points = [3.6, 3.8, 3.9]
+    y_points = [1.675, 1.436, 1.318]
+    approximating_value = 3.7
+    
+    nevilles_method(x_points, y_points, approximating_value)
+    print("\n")
+    
+    x_points = [7.2, 7.4, 7.5, 7.6]
+    y_points = [23.5492, 25.3913, 26.8224, 27.4589]
+    divided_table = divided_difference_table(x_points, y_points)
+    
+    approximating_x = 7.3
+    final_approximation = get_approximate_result(divided_table, x_points, approximating_x)
+    
+    AnswerArray = []
+    for i in range(1, len(x_points)):
+        AnswerArray.append(divided_table[i][i])
 
-    spline_condition = np.zeros((size))
-
-    for i in range (1, size - 1):
-        first_term = (3 / (x_points[i + 1] - x_points[i])) * (y_points[i + 1] - y_points[i])
-        second_term = (3 / (x_points[i] - x_points[i - 1])) * (y_points[i] - y_points[i - 1])
-        spline_condition[i] = first_term - second_term
-
-    print(np.array(spline_condition))
-
-    print(np.array(np.linalg.solve(matrix, spline_condition)))
-
-# 2nd degree interpolating value for f(3.7)
-nevilles_method([3.6, 3.8, 3.9], [1.675, 1.436, 1.318], 3.7)
-print()
-# Approximate f(7.3)
-get_approximate_result(divided_table, x_points, 7.3, y_points[0])
-
-# Polynomial approximations for degrees 1, 2, 3
-x_points = [7.2, 7.4, 7.5, 7.6]
-y_points = [23.5492, 25.3913, 26.8224, 27.4589]
-divided_table = divided_difference_table(x_points, y_points)
-print()
-
-print()
-
-# Hermite polynomial approximation matrix
-hermite_matrix([3.6, 3.8, 3.9], [1.675, 1.436, 1.318], [-1.195, -1.188, -1.182])
-print()
-
-# Cubic spline interpolation
-cubic_spline_interpolation([2, 5, 8, 10], [3, 5, 7, 9])
+    print(AnswerArray)
+    print("\n")
+    print(final_approximation)
+    print("\n")
+    hermite_interpolation()
+    print("\n")
+    CubicSplineInterpolation()
