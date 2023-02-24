@@ -1,5 +1,5 @@
 # Chloe Ogles
-# Cot-4500-as1
+# Cot-4500-as2
 
 The purpose of this assignment is to apply concepts taught in class through programming exercises. The code creates an expected structure, ensures there's a readme with instructions on how to compile, and leads to a resulting correct output for each question
 
